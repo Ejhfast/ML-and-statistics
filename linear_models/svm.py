@@ -37,7 +37,7 @@ gwcost = T.grad(cost,W)
 # executable derivative from the gradients
 d_cost = theano.function([y,X,W],gwcost)
 
-# create test X data (add another 1s column for b parameter)
+# create test X data (add another 1s row for b parameter)
 Xt = numpy.matrix([[0,0,0,0,0],
                    [1,0,0,0,0],
                    [0,1,0,0,0],
