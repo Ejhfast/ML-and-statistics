@@ -13,7 +13,7 @@ X = T.dmatrix('X')
 W = T.dmatrix('W')
 
 # sum of squares cost function for linear regression
-cost = T.sum((y-T.dot(X,W))**2)
+cost = T.sum((y-T.dot(W,X))**2)
 # for L1 or L2 regularization, add T.sum(W**2) or T.sum(|W|)
 
 # compile executable cost
@@ -26,20 +26,20 @@ gwcost = T.grad(cost,W)
 d_cost = theano.function([y,X,W],gwcost)
 
 # create test X data (add another 1s column for b parameter)
-Xt = numpy.matrix(numpy.random.rand(n_data,x_dim+1))
-Xt[:,x_dim] = 1 
+Xt = numpy.matrix(numpy.random.rand(x_dim+1,n_data))
+Xt[:,x_dim] = 1
 
 # randomly choose parameters that we will later search for (x_dim+1 for b parameter)
-W_goal = numpy.matrix(numpy.random.rand(x_dim+1,y_dim))
+W_goal = numpy.matrix(numpy.random.rand(y_dim,x_dim+1))
 
 # generate y-data based on X and parameters
-yt = Xt*W_goal
+yt = W_goal*Xt
 
 print("searching for:")
 print("weights:", W_goal)
 
 # initialize search at zero for params
-Wt = numpy.matrix(numpy.zeros((x_dim+1,y_dim)))
+Wt = numpy.matrix(numpy.zeros((y_dim,x_dim+1)))
 
 learning_rate = 0.001
 
