@@ -1,6 +1,7 @@
 import theano.tensor as T
 import theano
 import numpy
+from util import gradient_descent
 
 iterations = 1000
 x_dim = 5
@@ -11,49 +12,31 @@ n_data = 100
 y = T.dmatrix('y')
 X = T.dmatrix('X')
 W = T.dmatrix('W')
-b = T.dvector("b")
+b = T.dmatrix("b")
+
+# We need b to broadcast across columns, e.g., each row of b corresponds to an individual class bias
+b = T.addbroadcast(b,1)
 
 # sum of squares cost function for linear regression
-cost = T.sum((y-(T.dot(X,W)+b))**2)
+cost = T.sum((y-(T.dot(W,X)+b))**2)
 # for L1 or L2 regularization, add T.sum(W**2) or T.sum(|W|)
 
-# compile executable cost
-run_cost = theano.function([y,X,W,b],cost)
-
-# get gradients in terms of W (parameter weights) and b
-gwcost = T.grad(cost,W)
-gbcost = T.grad(cost,b)
-
-# executable derivative from the gradients
-d_costw = theano.function([y,X,W,b],gwcost)
-d_costb = theano.function([y,X,W,b],gbcost)
-
 # create test X data (add another 1s column for b parameter)
-Xt = numpy.matrix(numpy.random.rand(n_data,x_dim))
+Xt = numpy.matrix(numpy.random.rand(x_dim,n_data))
 
 # randomly choose parameters that we will later search for (x_dim+1 for b parameter)
-W_goal = numpy.matrix(numpy.random.rand(x_dim,y_dim))
-b_goal = numpy.random.rand(y_dim)
+W_goal = numpy.matrix(numpy.random.rand(y_dim,x_dim))
+b_goal = numpy.matrix(numpy.random.rand(y_dim,1))
 
 # generate y-data based on X and parameters
-yt = Xt*W_goal+b_goal
-print(yt)
+yt = W_goal*Xt+b_goal
 
 print("searching for:")
 print("weights:", W_goal)
 print("b:",b_goal)
 
-# initialize search at zero for params
-Wt = numpy.matrix(numpy.zeros((x_dim,y_dim)))
-bt = numpy.zeros(y_dim)
+Wt, bt = gradient_descent(cost, X, y, W, b, Xt, yt, learning_rate=0.001)
 
-learning_rate = 0.001
-
-for i in range(0,iterations):
-    w_update = d_costw(yt,Xt,Wt,bt)
-    b_update = d_costb(yt,Xt,Wt,bt)
-    Wt = Wt - (w_update*learning_rate)
-    bt = bt - (b_update*learning_rate)
 print("After {} iterations found:".format(iterations))
 print(Wt)
 print(bt)
