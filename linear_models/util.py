@@ -5,7 +5,9 @@ import numpy
 # bespoke gradient descent function for linear models
 
 def gradient_descent(cost, X, y, W, b, Xt, yt, learning_rate=0.001, iterations=1000):
-    # initialze zero weights
+    # initialize zero weights:
+    # assuming x data is [x-features * n-data]
+    # and y data is [y-dimensions * n-data]
     Wt = numpy.matrix(numpy.zeros((yt.shape[0],Xt.shape[0])))
     bt = numpy.matrix(numpy.zeros((yt.shape[0],1)))
     # get cost gradients
