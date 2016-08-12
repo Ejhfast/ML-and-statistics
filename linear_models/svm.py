@@ -13,6 +13,7 @@ W = T.dmatrix('W')
 delta = T.dscalar('delta')
 
 # ONE-VS-ONE HINGE LOSS for SVM
+# https://www.wikiwand.com/en/Hinge_loss#/Extensions
 
 # set margin that best class must have over other classes
 delta = 2
