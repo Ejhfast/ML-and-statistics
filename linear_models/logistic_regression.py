@@ -16,7 +16,8 @@ b = T.dmatrix('b')
 # We need b to broadcast across columns, e.g., each row of b corresponds to an individual class bias
 b = T.addbroadcast(b,1)
 
-# cross entropy
+# Softmax cross-entropy loss:
+# http://cs231n.github.io/linear-classify/
 
 # compute exponential of current class predictions
 exp_scores = T.exp(W.dot(X)+b)
