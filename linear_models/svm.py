@@ -33,7 +33,7 @@ remove_correct = T.mul(margins, 1-y)
 # take the mean of the sum of the error + the regularization parameter
 cost = T.mean(T.sum(remove_correct))+T.sum(W**2)
 
-# create test X data (add another 1s row for b parameter)
+# create test X data 
 Xt = numpy.matrix([[0,0,0,0,0],
                    [1,0,0,0,0],
                    [0,1,0,0,0],

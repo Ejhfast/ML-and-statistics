@@ -15,9 +15,13 @@ def gradient_descent(cost, X, y, W, b, Xt, yt, learning_rate=0.001, iterations=1
     # get executable derivatives
     d_costw = theano.function([X,y,W,b],gwcost)
     d_costb = theano.function([X,y,W,b],gbcost)
+
+    run_cost = theano.function([X,y,W,b], cost)
+
     for i in range(0,iterations):
         w_update = d_costw(Xt,yt,Wt,bt)
         b_update = d_costb(Xt,yt,Wt,bt)
         Wt = Wt - (w_update*learning_rate)
         bt = bt - (b_update*learning_rate)
+        print(run_cost(Xt,yt,Wt,bt))
     return (Wt, bt)

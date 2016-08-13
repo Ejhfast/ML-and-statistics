@@ -21,7 +21,7 @@ b = T.addbroadcast(b,1)
 cost = T.sum((y-(T.dot(W,X)+b))**2)
 # for L1 or L2 regularization, add T.sum(W**2) or T.sum(|W|)
 
-# create test X data (add another 1s column for b parameter)
+# create test X data 
 Xt = numpy.matrix(numpy.random.rand(x_dim,n_data))
 
 # randomly choose parameters that we will later search for (x_dim+1 for b parameter)

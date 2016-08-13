@@ -19,14 +19,8 @@ b = T.addbroadcast(b,1)
 # cross entropy
 
 # compute current class predictions
-scores = W.dot(X)+b
-expp = T.exp(scores)
-
-nex = T.mul(-1 * T.log(expp / T.sum(expp,axis=1)),y)
-
-ff = theano.function([X,W,b],T.sum(expp,axis=1))
-
-cost = T.mean(T.sum(nex,axis=1))
+e_scores = T.exp(W.dot(X)+b)
+cost = T.mean(T.sum(T.mul(-1 * T.log(e_scores / T.sum(e_scores,axis=0)),y),axis=1))+T.sum(W**2)
 
 # create test X data (add another 1s row for b parameter)
 Xt = numpy.matrix([[0,0,0,0,0],
@@ -35,18 +29,12 @@ Xt = numpy.matrix([[0,0,0,0,0],
                    [0,0,1,0,1],
                    [0,0,0,1,0]])
 
-
 yt = numpy.matrix([[1,0,1,0,1],
                    [0,1,0,0,0],
                    [0,0,0,1,0]])
 
 Wt = numpy.matrix(numpy.zeros((yt.shape[0],Xt.shape[0])))
 bt = numpy.matrix(numpy.zeros((yt.shape[0],1)))
-
-print(theano.function([X,W,b],W.dot(X)+b)(Xt,Wt,bt))
-print(theano.function([X,W,b],T.exp(W.dot(X)+b))(Xt,Wt,bt))
-print(theano.function([X,W,b],T.sum(expp,axis=1))(Xt,Wt,bt))
-print(theano.function([X,W,b],exp / T.sum(expp,axis=1))(Xt,Wt,bt))
 
 # use generalizable gradient descent function
 Wt, bt = gradient_descent(cost, X, y, W, b, Xt, yt, learning_rate=0.001)
