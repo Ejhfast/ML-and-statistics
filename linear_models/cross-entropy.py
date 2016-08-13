@@ -18,9 +18,14 @@ b = T.addbroadcast(b,1)
 
 # cross entropy
 
-# compute current class predictions
-e_scores = T.exp(W.dot(X)+b)
-cost = T.mean(T.sum(T.mul(-1 * T.log(e_scores / T.sum(e_scores,axis=0)),y),axis=1))+T.sum(W**2)
+# compute exponential of current class predictions
+exp_scores = T.exp(W.dot(X)+b)
+# normalize scores by other class predictions
+adjusted_scores = -1 * T.log(exp_scores / T.sum(exp_scores, axis=0))
+# zero out the every class except the correct one
+adjusted_y = T.mul(adjusted_scores, y)
+# mean of sum and regularization
+cost = T.mean(T.sum(adjusted_y, axis=1)) + T.sum(W**2)
 
 # create test X data (add another 1s row for b parameter)
 Xt = numpy.matrix([[0,0,0,0,0],
