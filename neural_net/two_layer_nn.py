@@ -63,16 +63,16 @@ yt = numpy.matrix([[1,0,1,0,1],
 
 # this is SUPER important: weights need to be initialized randomly, will fail if initialized to 0s
 # and the specific random interval can also be important: http://jmlr.org/proceedings/papers/v9/glorot10a/glorot10a.pdf
-rng = numpy.sqrt(6.0/(d_hidden1+Xt.shape[0]))
+def initialize_weights(shape, n):
+    rng = numpy.sqrt(6.0/n)
+    W = numpy.matrix(numpy.random.uniform(low=-1.0*rng, high=rng, size=shape))
+    b = numpy.matrix(numpy.zeros((shape[0],1)))
+    return W,b
 
-Wt1 = numpy.matrix(numpy.random.uniform(low=-1.0*rng, high=rng, size=(d_hidden1, Xt.shape[0])))
-bt1 = numpy.matrix(numpy.zeros((d_hidden1,1)))
+Wt1, bt1 = initialize_weights((d_hidden1, Xt.shape[0]), (d_hidden1+Xt.shape[0]))
+Wt2, bt2 = initialize_weights((d_hidden2, d_hidden1), (d_hidden1+d_hidden2))
 
-rng = numpy.sqrt(6.0/(d_hidden1+d_hidden2))
-
-Wt2 = numpy.matrix(numpy.random.uniform(low=-1.0*rng, high=rng, size=(d_hidden2, d_hidden1)))
-bt2 = numpy.matrix(numpy.zeros((d_hidden2,1)))
-
+# no need to be fancy with softmax weights
 Wt3 = numpy.matrix(numpy.zeros((yt.shape[0],d_hidden2)))
 bt3 = numpy.matrix(numpy.zeros((yt.shape[0],1)))
 
@@ -102,12 +102,6 @@ for i in range(0,2000):
     b2_update = d_costb2(Xt,yt,Wt1,bt1,Wt2,bt2,Wt3,bt3)
     w3_update = d_costw3(Xt,yt,Wt1,bt1,Wt2,bt2,Wt3,bt3)
     b3_update = d_costb3(Xt,yt,Wt1,bt1,Wt2,bt2,Wt3,bt3)
-    # print("w1",w1_update)
-    # print("b1",b1_update)
-    # print("w2",w2_update)
-    # print("b2",b2_update)
-    # print("w3",w3_update)
-    # print("b3",b3_update)
     Wt1 = Wt1 - (w1_update*learning_rate)
     bt1 = bt1 - (b1_update*learning_rate)
     Wt2 = Wt2 - (w2_update*learning_rate)
