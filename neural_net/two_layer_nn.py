@@ -12,13 +12,13 @@ random = T.shared_randomstreams.RandomStreams(rng.randint(999999))
 d_hidden1 = 3
 d_hidden2 = 3
 reg_level = 0.0
-dropout = 1 # higher = less dropout
+dropout_level = 1 # higher = less dropout
 
-# output y
+# input X, output y
 y = T.dmatrix('y')
+X = T.dmatrix('X')
 
 # for mlp1
-X1 = T.dmatrix('X1')
 W1 = T.dmatrix('W1')
 b1 = T.dmatrix('b1')
 b1 = T.addbroadcast(b1,1)
@@ -34,15 +34,21 @@ W3 = T.dmatrix('W3')
 b3 = T.dmatrix('b3')
 b3 = T.addbroadcast(b3,1)
 
-# the hidden layers using tanh activation
-mlp1 = T.mul(T.tanh(W1.dot(X1)+b1), random.binomial(n=1,p=dropout,size=(W1.shape[0],X1.shape[1]))) / dropout
-mlp2 = T.mul(T.tanh(W2.dot(mlp1)+b2), random.binomial(n=1,p=dropout,size=(W2.shape[0],mlp1.shape[1]))) / dropout
+# generic dropout function
+def dropout(x, rate): return T.mul(x, random.binomial(n=1,p=rate,size=(W1.shape[0],X.shape[1]))) / rate
+# generic mlp with tanh
+def mlp(X,W,b): return T.tanh(W.dot(X)+b)
+# make two layer NN
+mlp1 = dropout(mlp(X,W1,b1), dropout_level)
+mlp2 = dropout(mlp(mlp1,W2,b2), dropout_level)
 # now do softmax logistic regression on top (can use "categorical_crossentropy", built into theano):
 softmax = T.nnet.softmax(W3.dot(mlp2)+b3)
+# l1 and l2 regularization
 regularization = reg_level*(T.sum(W1**2)+T.sum(W2**2)+T.sum(T.abs_(W1))+T.sum(T.abs_(W2)))
-cost = T.sum(T.mean(T.nnet.categorical_crossentropy(softmax,y))) + regularization
+# final cost function
+cost = T.sum(T.nnet.categorical_crossentropy(softmax,y)) + regularization
 
-run_net = theano.function([X1,W1,b1,W2,b2,W3,b3], softmax)
+run_net = theano.function([X,W1,b1,W2,b2,W3,b3], softmax)
 
 # create test X data
 Xt = numpy.matrix([[0,0,0,0,0],
@@ -71,7 +77,7 @@ bt2 = numpy.matrix(numpy.zeros((d_hidden2,1)))
 Wt3 = numpy.matrix(numpy.zeros((yt.shape[0],d_hidden2)))
 bt3 = numpy.matrix(numpy.zeros((yt.shape[0],1)))
 
-params = [X1,y,W1,b1,W2,b2,W3,b3]
+params = [X,y,W1,b1,W2,b2,W3,b3]
 
 # get cost gradients
 gw1cost, gb1cost, gw2cost, gb2cost, gw3cost, gb3cost = T.grad(cost,params[2:])
