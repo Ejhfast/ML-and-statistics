@@ -29,7 +29,6 @@ b2 = T.dmatrix('b2')
 b2 = T.addbroadcast(b2,1)
 
 # for softmax on top
-X3 = T.dmatrix('X3')
 W3 = T.dmatrix('W3')
 b3 = T.dmatrix('b3')
 b3 = T.addbroadcast(b3,1)
