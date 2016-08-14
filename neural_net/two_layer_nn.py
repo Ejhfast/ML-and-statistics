@@ -12,7 +12,7 @@ random = T.shared_randomstreams.RandomStreams(rng.randint(999999))
 d_hidden1 = 3
 d_hidden2 = 3
 reg_level = 0.0
-dropout = 0.5
+dropout = 1 # higher = less dropout
 
 # output y
 y = T.dmatrix('y')
@@ -35,22 +35,14 @@ b3 = T.dmatrix('b3')
 b3 = T.addbroadcast(b3,1)
 
 # the hidden layers using tanh activation
-mlp1 = T.mul(T.tanh(W1.dot(X1)+b1), random.binomial(n=1,p=1-dropout,size=(W1.shape[0],X1.shape[1]))) / dropout
-mlp2 = T.mul(T.tanh(W2.dot(mlp1)+b2), random.binomial(n=1,p=1-dropout,size=(W2.shape[0],mlp1.shape[1]))) / dropout
-# now do softmax logistic regression on top:
-# the rest of this cost function is normal logistic regression on top of mlp
-scores = W3.dot(mlp2)+b3
-run_net = theano.function([X1,W1,b1,W2,b2,W3,b3], scores)
-# take exponentials
-exp_scores = T.exp(scores)
-# normalize scores by other class predictions
-adjusted_scores = -1 * T.log(exp_scores / T.sum(exp_scores, axis=0))
-# zero out the every class except the correct one
-adjusted_y = T.mul(adjusted_scores, y)
-# regularization parameter
+mlp1 = T.mul(T.tanh(W1.dot(X1)+b1), random.binomial(n=1,p=dropout,size=(W1.shape[0],X1.shape[1]))) / dropout
+mlp2 = T.mul(T.tanh(W2.dot(mlp1)+b2), random.binomial(n=1,p=dropout,size=(W2.shape[0],mlp1.shape[1]))) / dropout
+# now do softmax logistic regression on top (can use "categorical_crossentropy", built into theano):
+softmax = T.nnet.softmax(W3.dot(mlp2)+b3)
 regularization = reg_level*(T.sum(W1**2)+T.sum(W2**2)+T.sum(T.abs_(W1))+T.sum(T.abs_(W2)))
-# mean of sum of errors + regularization
-cost = T.mean(T.sum(adjusted_y, axis=1)) + regularization
+cost = T.sum(T.mean(T.nnet.categorical_crossentropy(softmax,y))) + regularization
+
+run_net = theano.function([X1,W1,b1,W2,b2,W3,b3], softmax)
 
 # create test X data
 Xt = numpy.matrix([[0,0,0,0,0],
