@@ -9,8 +9,11 @@ def make_char_embedding(str_list):
     all_char = sorted(set(''.join(str_list)))
     # 0 = null, 1 = start, 2 = end
     char2int = {c:(i+3) for i,c in enumerate(all_char)}
-    int2char = {(i+3):c for c,i in char2int.items()}
-    max_len = max([len(s) for s in str_list])+2
+    int2char = {i:c for c,i in char2int.items()}
+    int2char[0] = ''
+    int2char[1] = '[' # symbol for sen start
+    int2char[2] = ']'
+    max_len = max([len(s) for s in str_list])+5
     char_dim = len(all_char)+3
     X = numpy.zeros((len(str_list), max_len))
     y = numpy.zeros((len(str_list), max_len))
@@ -19,15 +22,16 @@ def make_char_embedding(str_list):
         for c_i, c in enumerate(s):
             X[i, c_i+1] = char2int[c]
             y[i, c_i] = char2int[c]
-        X[i, len(s)] = 2 # sentence end
-        y[i, len(s)-1] = 2
+        X[i, len(s)+1] = 2 # sentence end
+        y[i, len(s)] = 2
     return char_dim, char2int, int2char, X, y
 
 def initialize_weights(shape, n):
     rng = numpy.sqrt(6.0/n)
     return numpy.matrix(numpy.random.uniform(low=-1.0*rng, high=rng, size=shape))
 
-char_dim, char2int, int2char, X, yd = make_char_embedding(["hello x", "goobye", "whatever dude"])
+char_dim, char2int, int2char, X, yd = make_char_embedding(["he said something pretty funny"])
+print(int2char)
 
 u_train = initialize_weights((hidden_size,char_dim),char_dim)
 w_train = initialize_weights((hidden_size,hidden_size),hidden_size)
@@ -55,10 +59,13 @@ def forward_pass(curr_x, prev_s):
 # this function is obnoxious but powerful, see "scan_examples"
 [output,s], updates = theano.scan(forward_pass, outputs_info=[None,{"initial":init_s}], sequences=x)
 
-prediction = T.argmax(output)
+prediction = T.argmax(output,axis=1)
 cost = T.sum(T.nnet.categorical_crossentropy(output,y))
 
 run_cost = theano.function([x,y,U,V,W,init_s], cost)
+run_predict = theano.function([x,U,V,W,init_s], prediction)
+run_output = theano.function([x,U,V,W,init_s], output)
+
 
 print("Computing gradients")
 dU = T.grad(cost, U)
@@ -70,7 +77,14 @@ exe_dU = theano.function([x,y,U,V,W,init_s], dU)
 exe_dV = theano.function([x,y,U,V,W,init_s], dV)
 exe_dW = theano.function([x,y,U,V,W,init_s], dW)
 
-for i in range(0,1000):
+def sample(n):
+    start = [1]
+    for _ in range(n):
+        out = run_predict(start,u_train,v_train,w_train,init_s_dummy)
+        start.append(out[-1])
+    return ''.join([int2char[x] for x in start])
+
+for i in range(0,10000):
     update_u, update_v, update_w = 0.0, 0.0, 0.0
     batch_cost = 0.0
     for i_x in range(0,X.shape[0]):
@@ -84,3 +98,4 @@ for i in range(0,1000):
     v_train = v_train - (update_v*learning_rate)
     w_train = w_train - (update_w*learning_rate)
     print(batch_cost / X.shape[0])
+    print(sample(50))
